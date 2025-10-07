@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 
 /**
  * This is the provided NumberTriangle class to be used in this coding task.
@@ -104,32 +105,61 @@ public class NumberTriangle {
      * @throws IOException may naturally occur if an issue reading the file occurs
      */
     public static NumberTriangle loadTriangle(String fname) throws IOException {
-        // open the file and get a BufferedReader object whose methods
-        // are more convenient to work with when reading the file contents.
+        // open the file and get a BufferedReader object
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+        if (inputStream == null) {
+            throw new IOException("Resource not found: " + fname);
+        }
 
 
-        // TODO define any variables that you want to use to store things
-
-        // will need to return the top of the NumberTriangle,
-        // so might want a variable for that.
         NumberTriangle top = null;
 
-        String line = br.readLine();
-        while (line != null) {
 
-            // remove when done; this line is included so running starter code prints the contents of the file
-            System.out.println(line);
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
 
-            // TODO process the line
 
-            //read the next line
-            line = br.readLine();
+            String line = br.readLine();
+            ArrayList<ArrayList<Integer>> triangles = new ArrayList<>();
+
+
+            while (line != null) {
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    ArrayList<Integer> row = new ArrayList<>();
+                    String[] split = line.split(" ");
+                    for (String s : split) {
+                        s = s.trim();
+                        if (!s.isEmpty()) row.add(Integer.parseInt(s));
+                    }
+                    triangles.add(row);
+                }
+                line = br.readLine();
+            }
+
+
+            ArrayList<ArrayList<NumberTriangle>> nodes = new ArrayList<>();
+            for (ArrayList<Integer> rowVals : triangles) {
+                ArrayList<NumberTriangle> nodeRow = new ArrayList<>();
+                for (Integer v : rowVals) nodeRow.add(new NumberTriangle(v));
+                nodes.add(nodeRow);
+            }
+
+
+            for (int r = 0; r < nodes.size() - 1; r++) {
+                ArrayList<NumberTriangle> currentRow = nodes.get(r);
+                ArrayList<NumberTriangle> nextRow = nodes.get(r + 1);
+                for (int c = 0; c < currentRow.size(); c++) {
+                    NumberTriangle parent = currentRow.get(c);
+                    parent.setLeft(nextRow.get(c));
+                    parent.setRight(nextRow.get(c + 1));
+                }
+            }
+            // top node
+            top = nodes.get(0).get(0);
         }
-        br.close();
         return top;
     }
+
 
     public static void main(String[] args) throws IOException {
 
